@@ -1,0 +1,620 @@
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>ESTI XRPC API Documentation Generator</title>
+<style type="text/css">
+.headingFont {
+	color: #000000;
+	font-size: 90%;
+	font-family: Helvetica, Arial, sans-serif;
+	font-weight: bold;
+}
+.buttonFont {
+    font-size: 80%;
+    font-family: Helvetica, Arial, sans-serif;
+}
+.mainTable {
+    background-color: #AFBED7;
+    border: 1px solid #6F7E97;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    width: 100%;
+}
+input {
+    font-size: 80%;
+    font-family: Courier New, Courier, fixed;
+}
+a {
+    color: #0000AA;
+    font-size: 80%;
+    font-family: Helvetica, Arial, sans-serif;
+}
+</style>
+</head>
+<body bgcolor="#D4D1C8">
+
+<script language="JavaScript">
+        
+    function reloadForm() {
+        window.location.href = window.location.href;
+    }
+    
+    function deleteTableRow( id ) {
+        var row = document.getElementById( id );
+        row.parentNode.deleteRow( row.sectionRowIndex );
+    }
+    
+    function addTextAreaRows( id, count ) {
+        var txtarea = document.getElementById( id );
+        var value = txtarea.value;
+        var n, i = 0;
+        var lines = 0;
+        while( i < value.length ) {
+            n = value.indexOf( "\n", i );
+            if( n < 0 ) n = value.length;
+            lines += Math.floor( ( n - i ) / txtarea.cols ) + 1;
+            i = n + 1;
+        }
+        if( lines > txtarea.rows ) {
+            txtarea.rows = lines + 2;
+        }
+        else {
+            txtarea.rows += count;
+        }
+        txtarea.focus();
+    }
+    
+    function setTextAreaRows( id, count ) {
+        var txtarea = document.getElementById( id );
+        txtarea.rows = count;
+        txtarea.focus();
+    }
+    
+    function addSessionText( id ) {
+        insertValue( id, "Session must be loaded for current request." );
+    }
+    
+    function addHTMLNewline( id ) {
+        insertValue( id, "<br/>" );
+    }
+    
+    function addHTMLTable( id ) {        
+        var data = "<table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n" + 
+                   "  <tr>\n    <th>Key</th><th>Description</th><th>Required</th>\n  </tr>\n" +
+                   "  <tr>\n    <td><code>SID</code></td>\n    <td>Session ID</td>\n    <td>Yes</td>\n" +
+                   "  </tr>\n</table>";
+        insertValue( id, data );
+    }
+    
+    function insertValue( id, value ) {
+        var txtarea = document.getElementById( id );
+        if( document.selection ) {  // IE support
+            txtarea.focus();
+            var sel = document.selection.createRange();
+            sel.text = value;
+            txtarea.focus();
+        }
+        else if( txtarea.selectionStart || txtarea.selectionStart == '0' ) {  // FF support
+            var startPos = txtarea.selectionStart;
+            var endPos = txtarea.selectionEnd;
+            txtarea.value = txtarea.value.substring( 0, startPos ) + value + 
+                            txtarea.value.substring( endPos, txtarea.value.length );
+            txtarea.focus();
+            txtarea.selectionStart = startPos + value.length;
+            txtarea.selectionEnd = startPos + value.length;
+        }
+        else {
+            txtarea.value += value;
+            txtarea.focus();
+        }
+    }
+    
+    function deleteAllParameters() {
+        var tbody = document.getElementById( "parameters" );
+        var count = tbody.rows.length;
+        for( var i=0; i<count; i++ ) {
+            tbody.deleteRow( 0 );
+        }
+    }
+    
+    function addParameter( type, name ) {
+        var tbody = document.getElementById( "parameters" );
+        var row = document.createElement( "tr" );
+        var td = document.createElement( "td" );
+        var pos = tbody.rows.length + 1;
+        var name_id = "param_name_" + pos;
+        var desc_id = "param_desc_" + pos;
+        
+        var expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + desc_id + "', 4 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        
+        var reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + desc_id + "', 2 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        
+        var newline = document.createElement( "a" );
+        newline.setAttribute( "href", "javascript:addHTMLNewline( '" + desc_id + "' )" );
+        newline.appendChild( document.createTextNode( "[newline]" ) );
+        
+        var table = document.createElement( "a" );
+        table.setAttribute( "href", "javascript:addHTMLTable( '" + desc_id + "' )" );
+        table.appendChild( document.createTextNode( "[table]" ) );
+        
+        td.appendChild( document.createTextNode( "" + pos + ". " + name + " \u00a0\u00a0( " + type + " ) \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( newline );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( table );
+        td.appendChild( document.createElement( "br" ) );
+        
+        var ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", desc_id );
+        ta.setAttribute( "id", desc_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "2" );
+        td.appendChild( ta );
+        
+        var ne = document.createElement( "input" );
+        ne.setAttribute( "type", "hidden" );
+        ne.setAttribute( "name", name_id );
+        ne.setAttribute( "value", type + " " + name );
+        td.appendChild( ne );
+        
+        row.appendChild( td );
+        tbody.appendChild( row );
+    }
+    
+    function addErrorRow() {
+        var id = document.requestForm.error_count.value - 0 + 1;
+        var row_id = "error_" + id;
+        var code_id = "error_code_" + id;
+        var desc_id = "error_desc_" + id;
+        var tbody = document.getElementById( "errors" );
+        var row, td;
+        
+        document.requestForm.error_count.value = id;
+        row = document.createElement( "tr" );
+        row.setAttribute( "id", row_id );
+        
+        var del = document.createElement( "a" );
+        del.setAttribute( "href", "javascript:deleteTableRow( '" + row_id + "' )" );
+        del.appendChild( document.createTextNode( "[delete]" ) );
+        
+        var expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + desc_id + "', 2 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        
+        var reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + desc_id + "', 2 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        
+        var newline = document.createElement( "a" );
+        newline.setAttribute( "href", "javascript:addHTMLNewline( '" + desc_id + "' )" );
+        newline.appendChild( document.createTextNode( "[newline]" ) );
+        
+        var code = document.createElement( "input" );
+        code.setAttribute( "class", "errorFont" );
+        code.setAttribute( "name", code_id );
+        code.setAttribute( "size", "60" );
+        
+        var ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", desc_id );
+        ta.setAttribute( "id", desc_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "2" );
+        
+        td = document.createElement( "td" );
+        td.appendChild( document.createTextNode( "Error Code \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        td.appendChild( del );
+        td.appendChild( document.createElement( "br" ) );
+        td.appendChild( code );
+        td.appendChild( document.createElement( "br" ) );
+        td.appendChild( document.createTextNode( "Error Description and Cause \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( newline );
+        td.appendChild( document.createElement( "br" ) );
+        td.appendChild( ta );
+        
+        row.appendChild( td );
+        tbody.appendChild( row );
+        code.focus();
+    }
+    
+    function addExampleRow() {
+        var id = document.requestForm.example_count.value - 0 + 1;
+        var row_id = "example_" + id;
+        var req_desc_id = "request_desc_" + id;
+        var req_body_id = "request_body_" + id;
+        var resp_desc_id = "response_desc_" + id;
+        var resp_body_id = "response_body_" + id;
+        var tbody = document.getElementById( "examples" );
+        var row, td, desc, body, expand, reset, newline, ta;
+
+        document.requestForm.example_count.value = id;
+        
+        row = document.createElement( "tr" );
+        row.setAttribute( "id", row_id );
+        td = document.createElement( "td" );
+        
+        var del = document.createElement( "a" );
+        del.setAttribute( "href", "javascript:deleteTableRow( '" + row_id + "' )" );
+        del.appendChild( document.createTextNode( "[delete]" ) );
+        
+        td.appendChild( document.createTextNode( "Request Comments (optional) \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + req_desc_id + "', 2 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + req_desc_id + "', 1 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        newline = document.createElement( "a" );
+        newline.setAttribute( "href", "javascript:addHTMLNewline( '" + req_desc_id + "' )" );
+        newline.appendChild( document.createTextNode( "[newline]" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( newline );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( del );
+        td.appendChild( document.createElement( "br" ) );
+        ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", req_desc_id );
+        ta.setAttribute( "id", req_desc_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "1" );
+        td.appendChild( ta );
+        td.appendChild( document.createElement( "br" ) );
+        
+        td.appendChild( document.createTextNode( "Request Body \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + req_body_id + "', 6 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + req_body_id + "', 12 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createElement( "br" ) );
+        ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", req_body_id );
+        ta.setAttribute( "id", req_body_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "12" );
+        td.appendChild( ta );
+        td.appendChild( document.createElement( "br" ) );
+        
+        td.appendChild( document.createTextNode( "Response Comments (optional) \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + resp_desc_id + "', 2 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + resp_desc_id + "', 1 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        newline = document.createElement( "a" );
+        newline.setAttribute( "href", "javascript:addHTMLNewline( '" + resp_desc_id + "' )" );
+        newline.appendChild( document.createTextNode( "[newline]" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( newline );
+        td.appendChild( document.createElement( "br" ) );
+        ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", resp_desc_id );
+        ta.setAttribute( "id", resp_desc_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "1" );
+        td.appendChild( ta );
+        td.appendChild( document.createElement( "br" ) );
+        
+        td.appendChild( document.createTextNode( "Response Body \u00a0\u00a0\u00a0\u00a0\u00a0" ) );
+        expand = document.createElement( "a" );
+        expand.setAttribute( "href", "javascript:addTextAreaRows( '" + resp_body_id + "', 6 )" );
+        expand.appendChild( document.createTextNode( "[expand]" ) );
+        reset = document.createElement( "a" );
+        reset.setAttribute( "href", "javascript:setTextAreaRows( '" + resp_body_id + "', 12 )" );
+        reset.appendChild( document.createTextNode( "[reset]" ) );
+        td.appendChild( expand );
+        td.appendChild( document.createTextNode( " \u00a0\u00a0" ) );
+        td.appendChild( reset );
+        td.appendChild( document.createElement( "br" ) );
+        ta = document.createElement( "textarea" );
+        ta.setAttribute( "name", resp_body_id );
+        ta.setAttribute( "id", resp_body_id );
+        ta.setAttribute( "cols", "100" );
+        ta.setAttribute( "rows", "12" );
+        td.appendChild( ta );
+        td.appendChild( document.createElement( "br" ) );
+        td.appendChild( document.createTextNode( " \u00a0" ) );
+
+        row.appendChild( td );
+        tbody.appendChild( row );
+    }
+    
+    function verifyType( name, val ) {
+        if( val.toLowerCase() == "string" ) return "String";
+        if( val.toLowerCase() == "map" )    return "Map";
+        if( val.toLowerCase() == "list" )   return "List";
+        if( val.toLowerCase() == "void" )   return "void";
+        alert( "Invalid type for " + name + ": \"" + val + "\"\n\nExpected: String, Map, or List." );
+        return "";
+    }
+    
+    function restoreSignature() {
+        document.requestForm.signature.value = document.requestForm.signature_ok.value;
+    }
+    
+    function parseSignature( value, signature, types, names ) {
+    
+        var sig_format = "BLC.APIName( Type Name1, Type Name2, ... ) = Type";
+        var sig_regexp = /^\s*(\w+)\.(\w+)\s*\(\s*(.*)\)\s*=\s*(\w+)\s*$/;
+        var param_regexp = /^\s*(\w+)\s+(\w+)\s*$/;
+        
+        if( value.match( sig_regexp ) == null ) {
+            alert( "Invalid format for API call signature.\n\nExpected: " + sig_format );
+            return false;
+        }
+        signature[0] = RegExp.$1;  // BLC Name
+        signature[1] = RegExp.$2;  // API Name
+        signature[2] = RegExp.$3;  // Parameter list
+        signature[3] = RegExp.$4;  // Return type
+        
+        signature[3] = verifyType( "return value", signature[3] );
+        if( signature[3] == "" ) return false;
+        
+        var param_count = 0;
+        var param_list = "";
+        var i, params, type, name, sep;
+        
+        if( signature[2] != "" ) {
+            params = signature[2].split( ',' );
+            param_count = params.length;
+            
+            for( i=0; i<param_count; i++ ) {
+                if( params[i].match( param_regexp ) == null ) {
+                    alert( "Invalid format for parameter " + ( i+1 ) + ": \"" + params[i] + "\"" );
+                    return false;
+                }
+                type = RegExp.$1;
+                name = RegExp.$2;
+                
+                types[i] = verifyType( "parameter " + ( i+1 ), type );
+                if( types[i] == "" ) return false;
+                
+                names[i] = name;
+                sep = ( i+1 == param_count ) ? " " : ",";
+                param_list = param_list + " " + types[i] + " " + names[i] + sep;
+            }
+        }
+        signature[2] = param_list;
+        return true;
+    }
+    
+    function buildSignature( signature ) {
+        return signature[0] + "." + signature[1] + "(" + signature[2] + ") = " + signature[3];
+    }
+    
+    function updateSignature() {
+        // check signature
+        var form      = document.requestForm;
+        var value     = form.signature.value;
+        var signature = new Array();
+        var types     = new Array();
+        var names     = new Array();
+        if( parseSignature( value, signature, types, names ) == false ) return false;
+        
+        // update signature and UI
+        deleteAllParameters();
+        var i, count = types.length;
+        for( i=0; i<count; i++ ) {
+            addParameter( types[i], names[i] );
+        }
+        
+        value = buildSignature( signature );
+        form.signature.value = value;
+        form.signature_ok.value = value;
+        form.param_count.value = count;
+        form.params_ok.value = signature[2];
+        if( form.return_value.value == "" ) {
+            form.return_value.value = ( signature[3] == "void" ) ? "None." : signature[3];
+        } 
+    }
+    
+    function loadPage() {
+        var form = document.requestForm;
+        form.action = "apidoc.jsp";
+        form.target = "_self";
+        form.submit();
+    }
+    
+    function generatePage() {
+        var form = document.requestForm;
+        var value = form.signature.value;
+        if( value == "" ) {
+            alert( "Please enter API signature." );
+            form.signature.focus();
+            return false;
+        }
+        if( form.description.value == "" ) {
+            alert( "Please enter API description." );
+            form.description.focus();
+            return false;
+        }
+
+        // detect loss of dynamic elements
+        if( document.getElementById( "parameters" ).rows.length != form.param_count.value ) {
+            alert( "Conflict between API signature and current parameter table: expected " + 
+                   form.param_count.value + " parameter(s).\n\n" + 
+                   "Reloading generator page may clear form contents, " + 
+                   "check parameters, errors, and examples." );
+            return false;
+        }
+        
+        // process signature changes
+        if( value != form.signature_ok.value ) {
+            // check format of new signature
+            var signature = new Array();
+            var types     = new Array();
+            var names     = new Array();
+            if( parseSignature( value, signature, types, names ) == false ) return false;
+            
+            // make sure parameter list was not changed
+            if( signature[2] != form.params_ok.value ) {
+                alert( "Conflict between updated API signature and current parameter table.\n\n" +
+                       "Click on [Update] to clear parameter table and process updated API signature.\n" + 
+                       "Click on [Restore] to discard API signature changes." );
+                return false;
+            }
+            
+            value = buildSignature( signature );
+            form.signature.value = value;
+            form.signature_ok.value = value;
+        }
+        
+        form.action = "apidoc-gen.jsp";
+        form.target = "xrpc_preview";
+        form.submit();
+    }
+</script>
+
+<form name="requestForm" action="apidoc.jsp" method="POST">
+
+<table class="mainTable">
+  <tr>
+    <td style="padding:4px">
+      <table border="0" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td><a target="_top" href="../status/"><img src="../esti_logo.gif" alt="Home" title="Home" border="0"/></a></td>
+      <td><font size="5"><b>&nbsp;&nbsp;
+      ESTI&nbsp;7.2&nbsp;-&nbsp;XRPC&nbsp;API&nbsp;Documentation&nbsp;Generator
+      </b></font></td>
+      <td>
+        <table border="0" width="100%" cellpadding="0" cellspacing="0">
+          <tr><td align="right">
+            <a href="apidoc-help.html" target="xrpc_preview"><b>User&nbsp;Guide</b></a>&nbsp;&nbsp;
+          </td></tr>
+        </table>
+      </td>
+      </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<hr/>
+<span class="headingFont">API Call Signature</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'signature', 1 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'signature', 1 )">[reset]</a> &nbsp;&nbsp;
+<code>BLCName.APIName( Type Param1, ... ) = Type</code> &nbsp;&nbsp;&nbsp;
+<input class="buttonFont" type="button" value="Update" onClick="updateSignature()"/> &nbsp;
+<input class="buttonFont" type="button" value="Restore" onClick="restoreSignature()"/> &nbsp;
+<input class="buttonFont" type="button" value="Load" onClick="loadPage()"/>
+<br/>
+<textarea name="signature" id="signature" cols="102" rows="1"></textarea>
+<input type="hidden" name="signature_ok" value=""/>
+<input type="hidden" name="params_ok" value=""/>
+<hr/>
+
+<span class="headingFont">Description</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'description', 5 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'description', 5 )">[reset]</a> &nbsp;
+<a href="javascript:addHTMLNewline( 'description' )">[newline]</a> &nbsp;
+<a href="javascript:addHTMLTable( 'description' )">[table]</a>
+<br/>
+<textarea name="description" id="description" cols="102" rows="5"></textarea>
+<hr/>
+
+<span class="headingFont">Required Preconditions</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'preconditions', 4 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'preconditions', 2 )">[reset]</a> &nbsp;
+<a href="javascript:addHTMLNewline( 'preconditions' )">[newline]</a> &nbsp;
+<a href="javascript:addHTMLTable( 'preconditions' )">[table]</a> &nbsp;
+<a href="javascript:addSessionText( 'preconditions' )">[session]</a>
+<br/>
+<textarea name="preconditions" id="preconditions" cols="102" rows="2"></textarea>
+<hr/>
+
+<input type="hidden" name="param_count" value="0"/>
+<span class="headingFont">Parameters</span> &nbsp;&nbsp;&nbsp;&nbsp;
+Note: parameter table is cleared and rebuilt when API signature is updated.
+<br/>
+<table cellpadding="6" cellspacing="0" border="1">
+<tbody id="parameters">
+
+</tbody>
+</table>
+<hr/>
+
+<span class="headingFont">Return Value</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'return_value', 4 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'return_value', 4 )">[reset]</a> &nbsp;
+<a href="javascript:addHTMLNewline( 'return_value' )">[newline]</a> &nbsp;
+<a href="javascript:addHTMLTable( 'return_value' )">[table]</a>
+<br/>
+<textarea name="return_value" id="return_value" cols="102" rows="4"></textarea>
+<hr/>
+
+<input type="hidden" name="error_count" value="0"/>
+<span class="headingFont">Errors</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addErrorRow()">[add]</a> &nbsp;&nbsp;&nbsp;&nbsp;
+Note: link to common API errors will be provided.
+<br/>
+<table cellpadding="4" cellspacing="0" border="1">
+<tbody id="errors">
+
+</tbody>
+</table>
+<hr/>
+
+<input type="hidden" name="example_count" value="1"/>
+<span class="headingFont">Examples</span> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addExampleRow()">[add]</a>
+<br/>
+<table cellpadding="4" cellspacing="0" border="1">
+<tbody id="examples">
+<tr id="example_1">
+<td>
+Request Comments (optional) &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'request_desc_1', 2 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'request_desc_1', 1 )">[reset]</a> &nbsp;
+<a href="javascript:addHTMLNewline( 'request_desc_1' )">[newline]</a> &nbsp;
+<a href="javascript:deleteTableRow( 'example_1' )">[delete]</a><br/>
+<textarea name="request_desc_1" id="request_desc_1" cols="100" rows="1"></textarea><br/>
+Request Body &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'request_body_1', 6 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'request_body_1', 12 )">[reset]</a><br/>
+<textarea name="request_body_1" id="request_body_1" cols="100" rows="12"></textarea><br/>
+Response Comments (optional) &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'response_desc_1', 2 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'response_desc_1', 1 )">[reset]</a> &nbsp;
+<a href="javascript:addHTMLNewline( 'response_desc_1' )">[newline]</a><br/>
+<textarea name="response_desc_1" id="response_desc_1" cols="100" rows="1"></textarea><br/>
+Response Body &nbsp;&nbsp;&nbsp;&nbsp;
+<a href="javascript:addTextAreaRows( 'response_body_1', 6 )">[expand]</a> &nbsp;
+<a href="javascript:setTextAreaRows( 'response_body_1', 12 )">[reset]</a><br/>
+<textarea name="response_body_1" id="response_body_1" cols="100" rows="12"></textarea><br/>
+&nbsp;
+</td>
+</tr>
+
+</tbody>
+</table>
+<hr/>
+
+<center>
+<input class="buttonFont" type="button" value="Generate" onClick="generatePage()"/> &nbsp;
+<input class="buttonFont" type="button" value="Clear" onClick="reloadForm()"/>
+</center>
+
+</form>
+</body>
+</html>
